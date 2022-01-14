@@ -24,7 +24,7 @@ interface IReadWritePlayers {
     function display($isCLI, $course, $filename = null);
 }
 
-class PlayersObject implements IReadWritePlayers {
+class PlayersObject {
 
     private $playersArray;
 
@@ -37,12 +37,15 @@ class PlayersObject implements IReadWritePlayers {
         //We'll only use this one if we're storing players as a JSON string
         $this->playerJsonString = null;
     }
+}
 
     /**
      * @param $source string Where we're retrieving the data from. 'json', 'array' or 'file'
      * @param $filename string Only used if we're reading players in 'file' mode.
      * @return string json
      */
+
+ Class ReadPlayers {
     function readPlayers($source, $filename = null) {
         $playerData = null;
 
@@ -66,6 +69,10 @@ class PlayersObject implements IReadWritePlayers {
 
     }
 
+}
+
+
+class WritePlayers{
     /**
      * @param $source string Where to write the data. 'json', 'array' or 'file'
      * @param $filename string Only used if we're writing in 'file' mode
@@ -94,8 +101,11 @@ class PlayersObject implements IReadWritePlayers {
                 break;
         }
     }
+}
 
 
+
+class GetPlayers{
     function getPlayerDataArray() {
 
         $players = [];
@@ -141,7 +151,9 @@ class PlayersObject implements IReadWritePlayers {
         $file = file_get_contents($filename);
         return $file;
     }
+}
 
+class DisplayPlayers{
     function display($isCLI, $source, $filename = null) {
 
         $players = $this->readPlayers($source, $filename);
@@ -196,6 +208,6 @@ class PlayersObject implements IReadWritePlayers {
 
 $playersObject = new PlayersObject();
 
-$playersObject->display(php_sapi_name() === 'cli', 'array');
+// $playersObject->display(php_sapi_name() === 'cli', 'array');
 
 ?>
