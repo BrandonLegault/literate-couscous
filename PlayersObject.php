@@ -22,6 +22,10 @@ interface IReadPlayers {
     function readPlayers($source, $filename = null);
 }
 
+interface IReadPlayersFromFile {
+    function readPlayers($filename);
+}
+
 interface IWritePlayers {
     function writePlayer($source, $player, $filename = null);
 }
@@ -53,36 +57,26 @@ class PlayersObject {
     }
 }
 
-
-Class ReadPlayers implements IReadPlayers{
-    /**
-     * @param $source string Where we're retrieving the data from. 'json', 'array' or 'file'
-     * @param $filename string Only used if we're reading players in 'file' mode.
-     * @return string json
-     */
-    function readPlayers($source, $filename = null) {
-        $playerData = null;
-
-        switch ($source) {
-            case 'array':
-                $playerData = $this->getPlayerDataArray();
-                break;
-            case 'json':
-                $playerData = $this->getPlayerDataJson();
-                break;
-            case 'file':
-                $playerData = $this->getPlayerDataFromFile($filename);
-                break;
-        }
-
-        if (is_string($playerData)) {
-            $playerData = json_decode($playerData);
-        }
-
-        return $playerData;
-
+class ReadPlayersArray {
+    function readPlayers() {
+     $players = new GetPlayersFromArray();
+     return $players->getPlayers();
     }
+}
 
+class ReadPlayersJson {
+    function readPlayers() {
+     $players = new GetPlayersFromJson();
+     $playerData = $players->getPlayers();
+     return json_decode($playerData);
+    }
+}
+
+class ReadPlayersFile {
+    function readPlayers($filename) {
+     $players = new getPlayerDataFromFile();
+     return $players->getPlayers($filename);
+    }
 }
 
 
