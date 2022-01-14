@@ -18,9 +18,15 @@
 */
 
 
-interface IReadWritePlayers {
+interface IReadPlayers {
     function readPlayers($source, $filename = null);
+}
+
+interface IWritePlayers {
     function writePlayer($source, $player, $filename = null);
+}
+
+interface IDisplayPlayers {
     function display($isCLI, $course, $filename = null);
 }
 
@@ -39,13 +45,13 @@ class PlayersObject {
     }
 }
 
+
+Class ReadPlayers implements IReadPlayers{
     /**
      * @param $source string Where we're retrieving the data from. 'json', 'array' or 'file'
      * @param $filename string Only used if we're reading players in 'file' mode.
      * @return string json
      */
-
- Class ReadPlayers {
     function readPlayers($source, $filename = null) {
         $playerData = null;
 
@@ -72,7 +78,7 @@ class PlayersObject {
 }
 
 
-class WritePlayers{
+class WritePlayers implements IWritePlayers{
     /**
      * @param $source string Where to write the data. 'json', 'array' or 'file'
      * @param $filename string Only used if we're writing in 'file' mode
@@ -153,7 +159,7 @@ class GetPlayers{
     }
 }
 
-class DisplayPlayers{
+class DisplayPlayers implements IDisplayPlayers{
     function display($isCLI, $source, $filename = null) {
 
         $players = $this->readPlayers($source, $filename);
