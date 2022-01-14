@@ -30,6 +30,14 @@ interface IDisplayPlayers {
     function display($isCLI, $course, $filename = null);
 }
 
+interface IGetPlayers {
+    function getPlayers();
+}
+
+interface IGetPLayersFromFile {
+    function getPlayers($filename);
+}
+
 class PlayersObject {
 
     private $playersArray;
@@ -110,9 +118,15 @@ class WritePlayers implements IWritePlayers{
 }
 
 
+class GetPlayersFromFile implements IGetPLayersFromFile{
+    function getPlayers($filename) {
+        $file = file_get_contents($filename);
+        return $file;
+    }
+}
 
-class GetPlayers{
-    function getPlayerDataArray() {
+class GetPlayersFromArray implements IGetPlayers{
+    function getPlayers() {
 
         $players = [];
 
@@ -147,17 +161,15 @@ class GetPlayers{
         return $players;
 
     }
+}
 
-    function getPlayerDataJson() {
+class GetPlayersFromJson implements IGetPlayers{
+     function getPlayers() {
         $json = '[{"name":"Jonas Valenciunas","age":26,"job":"Center","salary":"4.66m"},{"name":"Kyle Lowry","age":32,"job":"Point Guard","salary":"28.7m"},{"name":"Demar DeRozan","age":28,"job":"Shooting Guard","salary":"26.54m"},{"name":"Jakob Poeltl","age":22,"job":"Center","salary":"2.704m"}]';
         return $json;
     }
-
-    function getPlayerDataFromFile($filename) {
-        $file = file_get_contents($filename);
-        return $file;
-    }
 }
+
 
 class DisplayPlayers implements IDisplayPlayers{
     function display($isCLI, $source, $filename = null) {
