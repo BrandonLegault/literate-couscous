@@ -18,7 +18,11 @@
 */
 
 interface IWritePlayers {
-    function writePlayer($source, $player, $filename = null);
+    function writePlayer($player);
+}
+
+interface IWritePlayersToFile {
+    function writePlayer(IGetPLayersFromFile $getterObj, $player, $filename);
 }
 
 interface IDisplayPlayers {
@@ -37,50 +41,44 @@ interface IFormatData{
     function formatData($data);
 }
 
-class PlayersObject {
 
-    private $playersArray;
-
+class WritePlayerJson implements IWritePlayers{
     private $playerJsonString;
 
     public function __construct() {
-        //We're only using this if we're storing players as an array.
-        $this->playersArray = [];
-
-        //We'll only use this one if we're storing players as a JSON string
         $this->playerJsonString = null;
+    }
+
+    function writePlayer($player){
+        $players = [];
+        if ($this->playerJsonString) {
+            $players = json_decode($this->playerJsonString);
+        }
+        $players[] = $player;
+        $this->playerJsonString = json_encode($player);
     }
 }
 
+class WritePlayerArray implements IWritePlayers{
+    private $playersArray;
 
-class WritePlayers implements IWritePlayers{
-    /**
-     * @param $source string Where to write the data. 'json', 'array' or 'file'
-     * @param $filename string Only used if we're writing in 'file' mode
-     * @param $player \stdClass Class implementation of the player with name, age, job, salary.
-     */
-    function writePlayer($source, $player, $filename = null) {
-        switch ($source) {
-            case 'array':
-                $this->playersArray[] = $player;
-                break;
-            case 'json':
-                $players = [];
-                if ($this->playerJsonString) {
-                    $players = json_decode($this->playerJsonString);
-                }
-                $players[] = $player;
-                $this->playerJsonString = json_encode($player);
-                break;
-            case 'file':
-                $players = json_decode($this->getPlayerDataFromFile($filename));
-                if (!$players) {
-                    $players = [];
-                }
-                $players[] = $player;
-                file_put_contents($filename, json_encode($players));
-                break;
+    public function __construct() {
+        $this->playersArray = [];
+    }
+
+    function writePlayer($player){
+        $this->playersArray[] = $player;
+    }
+}
+
+class WritePlayerFile implements IWritePlayersToFile{
+    function writePLayer(IGetPLayersFromFile $getterObj, $player, $filename){
+        $players = $getterObj->getPlayers($filename);
+        if (!$players) {
+            $players = [];
         }
+        $players[] = $player;
+        file_put_contents($filename, json_encode($players));
     }
 }
 
@@ -204,15 +202,34 @@ class DisplayPlayersNotCLI implements IDisplayPlayers{
         }
 }
 
+
+
 // $playersObject = new DisplayPlayersCLI();
 
 // $playersObject->display(php_sapi_name() === 'cli', 'array');
 
-$readPlayersObj = new GetPlayersFromFile();
-$players = $readPlayersObj->getPlayers('playerdata.json');
+// $readPlayersObj = new GetPlayersFromFile();
+// $players = $readPlayersObj->getPlayers('playerdata.json');
+//
+// $displayObj = new DisplayPlayersCLI();
+// $displayObj->display($players);
 
-$displayObj = new DisplayPlayersCLI();
-$displayObj->display($players);
+$rea = new \stdClass();
+$rea->name = 'REA';
+$rea->age = 28;
+$rea->job = 'Shooting Guard';
+$rea->salary = '26.54m';
+
+// $p = new WritePlayerFile();
+// $p->writePlayer(new GetPlayersFromFile(),$rea, 'playerdata.json');
+
+// $p = new WritePlayerArray();
+// $p->writePlayer($rea);
+// var_dump($p);
+
+// $p = new WritePlayerJson();
+// $p->writePlayer($rea);
+// var_dump($p);
 
 
 ?>
