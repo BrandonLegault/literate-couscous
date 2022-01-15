@@ -17,21 +17,12 @@
 
 */
 
-
-interface IReadPlayers {
-    function readPlayers($source, $filename = null);
-}
-
-interface IReadPlayersFromFile {
-    function readPlayers($filename);
-}
-
 interface IWritePlayers {
     function writePlayer($source, $player, $filename = null);
 }
 
 interface IDisplayPlayers {
-    function display($isCLI, $course, $filename = null);
+    function display($players);
 }
 
 interface IGetPlayers {
@@ -40,6 +31,10 @@ interface IGetPlayers {
 
 interface IGetPLayersFromFile {
     function getPlayers($filename);
+}
+
+interface IFormatData{
+    function formatData($data);
 }
 
 class PlayersObject {
@@ -54,28 +49,6 @@ class PlayersObject {
 
         //We'll only use this one if we're storing players as a JSON string
         $this->playerJsonString = null;
-    }
-}
-
-class ReadPlayersArray {
-    function readPlayers() {
-     $players = new GetPlayersFromArray();
-     return $players->getPlayers();
-    }
-}
-
-class ReadPlayersJson {
-    function readPlayers() {
-     $players = new GetPlayersFromJson();
-     $playerData = $players->getPlayers();
-     return json_decode($playerData);
-    }
-}
-
-class ReadPlayersFile {
-    function readPlayers($filename) {
-     $players = new getPlayerDataFromFile();
-     return $players->getPlayers($filename);
     }
 }
 
@@ -112,10 +85,18 @@ class WritePlayers implements IWritePlayers{
 }
 
 
-class GetPlayersFromFile implements IGetPLayersFromFile{
+class GetPlayersFromFile implements IGetPLayersFromFile, IFormatData{
     function getPlayers($filename) {
         $file = file_get_contents($filename);
+        $file = $this->formatData($file);
+
         return $file;
+    }
+
+    function formatData($data){
+        if (is_string($data)) {
+            return json_decode($data);
+        }
     }
 }
 
@@ -157,30 +138,37 @@ class GetPlayersFromArray implements IGetPlayers{
     }
 }
 
-class GetPlayersFromJson implements IGetPlayers{
+class GetPlayersFromJson implements IGetPlayers, IFormatData{
      function getPlayers() {
         $json = '[{"name":"Jonas Valenciunas","age":26,"job":"Center","salary":"4.66m"},{"name":"Kyle Lowry","age":32,"job":"Point Guard","salary":"28.7m"},{"name":"Demar DeRozan","age":28,"job":"Shooting Guard","salary":"26.54m"},{"name":"Jakob Poeltl","age":22,"job":"Center","salary":"2.704m"}]';
-        return $json;
+        $formattedJson = $this->formatData($json);
+
+        return $formattedJson;
+    }
+
+    function formatData($data){
+        if (is_string($data)) {
+            return json_decode($data);
+        }
+    }
+}
+
+class DisplayPlayersCLI implements IDisplayPlayers{
+    function display($players){
+    echo "Current Players: \n";
+    foreach ($players as $player) {
+
+        echo "\tName: $player->name\n";
+        echo "\tAge: $player->age\n";
+        echo "\tSalary: $player->salary\n";
+        echo "\tJob: $player->job\n\n";
+        }
     }
 }
 
 
-class DisplayPlayers implements IDisplayPlayers{
-    function display($isCLI, $source, $filename = null) {
-
-        $players = $this->readPlayers($source, $filename);
-
-        if ($isCLI) {
-            echo "Current Players: \n";
-            foreach ($players as $player) {
-
-                echo "\tName: $player->name\n";
-                echo "\tAge: $player->age\n";
-                echo "\tSalary: $player->salary\n";
-                echo "\tJob: $player->job\n\n";
-            }
-        } else {
-
+class DisplayPlayersNotCLI implements IDisplayPlayers{
+    function display($players) {
             ?>
             <!DOCTYPE html>
             <html>
@@ -214,12 +202,17 @@ class DisplayPlayers implements IDisplayPlayers{
             </html>
             <?php
         }
-    }
-
 }
 
-$playersObject = new PlayersObject();
+// $playersObject = new DisplayPlayersCLI();
 
 // $playersObject->display(php_sapi_name() === 'cli', 'array');
+
+$readPlayersObj = new GetPlayersFromFile();
+$players = $readPlayersObj->getPlayers('playerdata.json');
+
+$displayObj = new DisplayPlayersCLI();
+$displayObj->display($players);
+
 
 ?>
