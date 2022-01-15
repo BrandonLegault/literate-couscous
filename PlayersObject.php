@@ -202,34 +202,128 @@ class DisplayPlayersNotCLI implements IDisplayPlayers{
         }
 }
 
-
-
-// $playersObject = new DisplayPlayersCLI();
-
-// $playersObject->display(php_sapi_name() === 'cli', 'array');
-
-// $readPlayersObj = new GetPlayersFromFile();
-// $players = $readPlayersObj->getPlayers('playerdata.json');
-//
-// $displayObj = new DisplayPlayersCLI();
-// $displayObj->display($players);
+//////////////////////////////////////
+// Testing section
+//////////////////////////////////////
 
 $rea = new \stdClass();
-$rea->name = 'REA';
-$rea->age = 28;
-$rea->job = 'Shooting Guard';
-$rea->salary = '26.54m';
-
-// $p = new WritePlayerFile();
-// $p->writePlayer(new GetPlayersFromFile(),$rea, 'playerdata.json');
-
-// $p = new WritePlayerArray();
-// $p->writePlayer($rea);
-// var_dump($p);
-
-// $p = new WritePlayerJson();
-// $p->writePlayer($rea);
-// var_dump($p);
+$rea->name = 'Rea';
+$rea->age = 100;
+$rea->job = 'Poker Player';
+$rea->salary = '20M';
 
 
+// ARRAY TEST
+class ArrayGenerator{
+    function write($player){
+        $arr = new WritePlayerArray();
+        $arr->writePlayer($player);
+        var_dump($arr);
+    }
+
+    function get(){
+        $arr = new GetPlayersFromArray();
+        $arr = $arr->getPlayers();
+        echo json_encode($arr);
+    }
+
+    function displayCli(){
+        $arr = new GetPlayersFromArray();
+        $players = $arr->getPlayers();
+
+        $arr = new DisplayPlayersCLI();
+        $arr = $arr->display($players);
+    }
+
+    function displayNotCli(){
+        $arr = new GetPlayersFromArray();
+        $players = $arr->getPlayers();
+
+        $arr = new DisplayPlayersNotCLI();
+        $arr = $arr->display($players);
+    }
+}
+
+// $a = new ArrayGenerator();
+// $a->get();
+// $a->displayCli();
+// $a->displayNotCli();
+// $a->write($rea);
+
+
+// JSON TEST
+class JSONGenerator{
+    function write($player){
+        $arr = new WritePlayerJson();
+        $arr->writePlayer($player);
+        var_dump($arr);
+    }
+
+    function get(){
+        $arr = new GetPlayersFromJson();
+        $arr = $arr->getPlayers();
+        echo json_encode($arr);
+    }
+
+    function displayCli(){
+        $arr = new GetPlayersFromJson();
+        $players = $arr->getPlayers();
+
+        $arr = new DisplayPlayersCLI();
+        $arr = $arr->display($players);
+    }
+
+    function displayNotCli(){
+        $arr = new GetPlayersFromJson();
+        $players = $arr->getPlayers();
+
+        $arr = new DisplayPlayersNotCLI();
+        $arr = $arr->display($players);
+    }
+}
+
+// $a = new JSONGenerator();
+// $a->get();
+// $a->displayCli();
+// $a->displayNotCli();
+// $a->write($rea);
+
+
+// File TEST
+class FileGenerator{
+    function write($player){
+        $getObj = new GetPlayersFromFile();
+
+        $arr = new WritePlayerFile();
+        $arr->writePlayer($getObj, $player, 'test.txt');
+    }
+
+    function get(){
+        $arr = new GetPlayersFromFile();
+        $arr = $arr->getPlayers('test.txt');
+        echo ($arr);
+    }
+
+    function displayCli(){
+        $arr = new GetPlayersFromFile();
+        $players = $arr->getPlayers('test.txt');
+
+        $arr = new DisplayPlayersCLI();
+        $arr = $arr->display($players);
+    }
+
+    function displayNotCli(){
+        $arr = new GetPlayersFromJson();
+        $players = $arr->getPlayers('test.txt');
+
+        $arr = new DisplayPlayersNotCLI();
+        $arr = $arr->display($players);
+    }
+}
+
+// $a = new FileGenerator();
+// $a->get();
+// $a->displayCli();
+// $a->displayNotCli();
+// $a->write($rea);
 ?>
