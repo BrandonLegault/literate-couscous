@@ -17,86 +17,90 @@
 
 */
 
-
-interface IReadWritePlayers {
-    function readPlayers($source, $filename = null);
-    function writePlayer($source, $player, $filename = null);
-    function display($isCLI, $course, $filename = null);
+interface IWritePlayers {
+    function write($player);
 }
 
-class PlayersObject implements IReadWritePlayers {
+interface IWritePlayersToFile {
+    function write(IGetPLayersFromFile $getterObj, $player, $filename);
+}
 
-    private $playersArray;
+interface IDisplayPlayers {
+    function display($players);
+}
 
+interface IGetPlayers {
+    function get();
+}
+
+interface IGetPLayersFromFile {
+    function get($filename);
+}
+
+interface IFormatData{
+    function formatData($data);
+}
+
+
+class WritePlayerJson implements IWritePlayers{
     private $playerJsonString;
 
     public function __construct() {
-        //We're only using this if we're storing players as an array.
-        $this->playersArray = [];
-
-        //We'll only use this one if we're storing players as a JSON string
         $this->playerJsonString = null;
     }
 
-    /**
-     * @param $source string Where we're retrieving the data from. 'json', 'array' or 'file'
-     * @param $filename string Only used if we're reading players in 'file' mode.
-     * @return string json
-     */
-    function readPlayers($source, $filename = null) {
-        $playerData = null;
-
-        switch ($source) {
-            case 'array':
-                $playerData = $this->getPlayerDataArray();
-                break;
-            case 'json':
-                $playerData = $this->getPlayerDataJson();
-                break;
-            case 'file':
-                $playerData = $this->getPlayerDataFromFile($filename);
-                break;
+    function write($player){
+        $players = [];
+        if ($this->playerJsonString) {
+            $players = json_decode($this->playerJsonString);
         }
+        $players[] = $player;
+        $this->playerJsonString = json_encode($player);
+    }
+}
 
-        if (is_string($playerData)) {
-            $playerData = json_decode($playerData);
-        }
+class WritePlayerArray implements IWritePlayers{
+    private $playersArray;
 
-        return $playerData;
-
+    public function __construct() {
+        $this->playersArray = [];
     }
 
-    /**
-     * @param $source string Where to write the data. 'json', 'array' or 'file'
-     * @param $filename string Only used if we're writing in 'file' mode
-     * @param $player \stdClass Class implementation of the player with name, age, job, salary.
-     */
-    function writePlayer($source, $player, $filename = null) {
-        switch ($source) {
-            case 'array':
-                $this->playersArray[] = $player;
-                break;
-            case 'json':
-                $players = [];
-                if ($this->playerJsonString) {
-                    $players = json_decode($this->playerJsonString);
-                }
-                $players[] = $player;
-                $this->playerJsonString = json_encode($player);
-                break;
-            case 'file':
-                $players = json_decode($this->getPlayerDataFromFile($filename));
-                if (!$players) {
-                    $players = [];
-                }
-                $players[] = $player;
-                file_put_contents($filename, json_encode($players));
-                break;
+    function write($player){
+        $this->playersArray[] = $player;
+    }
+}
+
+class WritePlayerFile implements IWritePlayersToFile{
+    function write(IGetPLayersFromFile $getterObj, $player, $filename){
+        $players = $getterObj->get($filename);
+        if (!$players) {
+            $players = [];
         }
+        $players[] = $player;
+        file_put_contents($filename, json_encode($players));
+    }
+}
+
+
+class GetPlayersFromFile implements IGetPLayersFromFile, IFormatData{
+    function get($filename) {
+        $file = file_get_contents($filename);
+        $file = $this->formatData($file);
+
+        return $file;
     }
 
+    function formatData($data){
+        if (is_string($data)) {
+            return json_decode($data);
+        }
+        return $data;
+    }
+}
 
-    function getPlayerDataArray() {
+class GetPlayersFromArray implements IGetPlayers{
+    function get() {
 
         $players = [];
 
@@ -131,32 +135,40 @@ class PlayersObject implements IReadWritePlayers {
         return $players;
 
     }
+}
 
-    function getPlayerDataJson() {
+class GetPlayersFromJson implements IGetPlayers, IFormatData{
+     function get() {
         $json = '[{"name":"Jonas Valenciunas","age":26,"job":"Center","salary":"4.66m"},{"name":"Kyle Lowry","age":32,"job":"Point Guard","salary":"28.7m"},{"name":"Demar DeRozan","age":28,"job":"Shooting Guard","salary":"26.54m"},{"name":"Jakob Poeltl","age":22,"job":"Center","salary":"2.704m"}]';
-        return $json;
+        $formattedJson = $this->formatData($json);
+
+        return $formattedJson;
     }
 
-    function getPlayerDataFromFile($filename) {
-        $file = file_get_contents($filename);
-        return $file;
+    function formatData($data){
+        if (is_string($data)) {
+            return json_decode($data);
+        }
+        return $data;
     }
+}
 
-    function display($isCLI, $source, $filename = null) {
+class DisplayPlayersCLI implements IDisplayPlayers{
+    function display($players){
+    echo "Current Players: \n";
+    foreach ($players as $player) {
 
-        $players = $this->readPlayers($source, $filename);
+        echo "\tName: $player->name\n";
+        echo "\tAge: $player->age\n";
+        echo "\tSalary: $player->salary\n";
+        echo "\tJob: $player->job\n\n";
+        }
+    }
+}
 
-        if ($isCLI) {
-            echo "Current Players: \n";
-            foreach ($players as $player) {
 
-                echo "\tName: $player->name\n";
-                echo "\tAge: $player->age\n";
-                echo "\tSalary: $player->salary\n";
-                echo "\tJob: $player->job\n\n";
-            }
-        } else {
-
+class DisplayPlayersNotCLI implements IDisplayPlayers{
+    function display($players) {
             ?>
             <!DOCTYPE html>
             <html>
@@ -190,12 +202,130 @@ class PlayersObject implements IReadWritePlayers {
             </html>
             <?php
         }
-    }
-
 }
 
-$playersObject = new PlayersObject();
+//////////////////////////////////////
+// Testing section
+//////////////////////////////////////
 
-$playersObject->display(php_sapi_name() === 'cli', 'array');
+$rea = new \stdClass();
+$rea->name = 'Rea';
+$rea->age = 100;
+$rea->job = 'Poker Player';
+$rea->salary = '20M';
 
+
+// ARRAY TEST
+class ArrayGenerator{
+    function write($player){
+        $arr = new WritePlayerArray();
+        $arr->write($player);
+        var_dump($arr);
+    }
+
+    function get(){
+        $arr = new GetPlayersFromArray();
+        $arr = $arr->get();
+        echo json_encode($arr);
+    }
+
+    function displayCli(){
+        $arr = new GetPlayersFromArray();
+        $players = $arr->get();
+
+        $arr = new DisplayPlayersCLI();
+        $arr = $arr->display($players);
+    }
+
+    function displayNotCli(){
+        $arr = new GetPlayersFromArray();
+        $players = $arr->get();
+
+        $arr = new DisplayPlayersNotCLI();
+        $arr = $arr->display($players);
+    }
+}
+
+// $a = new ArrayGenerator();
+// $a->get();
+// $a->displayCli();
+// $a->displayNotCli();
+// $a->write($rea);
+
+
+// JSON TEST
+class JSONGenerator{
+    function write($player){
+        $arr = new WritePlayerJson();
+        $arr->write($player);
+        var_dump($arr);
+    }
+
+    function get(){
+        $arr = new GetPlayersFromJson();
+        $arr = $arr->get();
+        echo json_encode($arr);
+    }
+
+    function displayCli(){
+        $arr = new GetPlayersFromJson();
+        $players = $arr->get();
+
+        $arr = new DisplayPlayersCLI();
+        $arr = $arr->display($players);
+    }
+
+    function displayNotCli(){
+        $arr = new GetPlayersFromJson();
+        $players = $arr->get();
+
+        $arr = new DisplayPlayersNotCLI();
+        $arr = $arr->display($players);
+    }
+}
+
+// $a = new JSONGenerator();
+// $a->get();
+// $a->displayCli();
+// $a->displayNotCli();
+// $a->write($rea);
+
+
+// File TEST
+class FileGenerator{
+    function write($player){
+        $getObj = new GetPlayersFromFile();
+
+        $arr = new WritePlayerFile();
+        $arr->write($getObj, $player, 'test.txt');
+    }
+
+    function get(){
+        $arr = new GetPlayersFromFile();
+        $arr = $arr->get('test.txt');
+        echo ($arr);
+    }
+
+    function displayCli(){
+        $arr = new GetPlayersFromFile();
+        $players = $arr->get('test.txt');
+
+        $arr = new DisplayPlayersCLI();
+        $arr = $arr->display($players);
+    }
+
+    function displayNotCli(){
+        $arr = new GetPlayersFromJson();
+        $players = $arr->get('test.txt');
+
+        $arr = new DisplayPlayersNotCLI();
+        $arr = $arr->display($players);
+    }
+}
+
+// $a = new FileGenerator();
+// $a->get();
+// $a->displayCli();
+// $a->displayNotCli();
+// $a->write($rea);
 ?>
