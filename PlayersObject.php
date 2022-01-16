@@ -18,11 +18,11 @@
 */
 
 interface IWritePlayers {
-    function writePlayer($player);
+    function write($player);
 }
 
 interface IWritePlayersToFile {
-    function writePlayer(IGetPLayersFromFile $getterObj, $player, $filename);
+    function write(IGetPLayersFromFile $getterObj, $player, $filename);
 }
 
 interface IDisplayPlayers {
@@ -30,11 +30,11 @@ interface IDisplayPlayers {
 }
 
 interface IGetPlayers {
-    function getPlayers();
+    function get();
 }
 
 interface IGetPLayersFromFile {
-    function getPlayers($filename);
+    function get($filename);
 }
 
 interface IFormatData{
@@ -49,7 +49,7 @@ class WritePlayerJson implements IWritePlayers{
         $this->playerJsonString = null;
     }
 
-    function writePlayer($player){
+    function write($player){
         $players = [];
         if ($this->playerJsonString) {
             $players = json_decode($this->playerJsonString);
@@ -66,14 +66,14 @@ class WritePlayerArray implements IWritePlayers{
         $this->playersArray = [];
     }
 
-    function writePlayer($player){
+    function write($player){
         $this->playersArray[] = $player;
     }
 }
 
 class WritePlayerFile implements IWritePlayersToFile{
-    function writePLayer(IGetPLayersFromFile $getterObj, $player, $filename){
-        $players = $getterObj->getPlayers($filename);
+    function write(IGetPLayersFromFile $getterObj, $player, $filename){
+        $players = $getterObj->get($filename);
         if (!$players) {
             $players = [];
         }
@@ -84,7 +84,7 @@ class WritePlayerFile implements IWritePlayersToFile{
 
 
 class GetPlayersFromFile implements IGetPLayersFromFile, IFormatData{
-    function getPlayers($filename) {
+    function get($filename) {
         $file = file_get_contents($filename);
         $file = $this->formatData($file);
 
@@ -95,11 +95,12 @@ class GetPlayersFromFile implements IGetPLayersFromFile, IFormatData{
         if (is_string($data)) {
             return json_decode($data);
         }
+        return $data;
     }
 }
 
 class GetPlayersFromArray implements IGetPlayers{
-    function getPlayers() {
+    function get() {
 
         $players = [];
 
@@ -137,7 +138,7 @@ class GetPlayersFromArray implements IGetPlayers{
 }
 
 class GetPlayersFromJson implements IGetPlayers, IFormatData{
-     function getPlayers() {
+     function get() {
         $json = '[{"name":"Jonas Valenciunas","age":26,"job":"Center","salary":"4.66m"},{"name":"Kyle Lowry","age":32,"job":"Point Guard","salary":"28.7m"},{"name":"Demar DeRozan","age":28,"job":"Shooting Guard","salary":"26.54m"},{"name":"Jakob Poeltl","age":22,"job":"Center","salary":"2.704m"}]';
         $formattedJson = $this->formatData($json);
 
@@ -148,6 +149,7 @@ class GetPlayersFromJson implements IGetPlayers, IFormatData{
         if (is_string($data)) {
             return json_decode($data);
         }
+        return $data;
     }
 }
 
@@ -217,19 +219,19 @@ $rea->salary = '20M';
 class ArrayGenerator{
     function write($player){
         $arr = new WritePlayerArray();
-        $arr->writePlayer($player);
+        $arr->write($player);
         var_dump($arr);
     }
 
     function get(){
         $arr = new GetPlayersFromArray();
-        $arr = $arr->getPlayers();
+        $arr = $arr->get();
         echo json_encode($arr);
     }
 
     function displayCli(){
         $arr = new GetPlayersFromArray();
-        $players = $arr->getPlayers();
+        $players = $arr->get();
 
         $arr = new DisplayPlayersCLI();
         $arr = $arr->display($players);
@@ -237,7 +239,7 @@ class ArrayGenerator{
 
     function displayNotCli(){
         $arr = new GetPlayersFromArray();
-        $players = $arr->getPlayers();
+        $players = $arr->get();
 
         $arr = new DisplayPlayersNotCLI();
         $arr = $arr->display($players);
@@ -255,19 +257,19 @@ class ArrayGenerator{
 class JSONGenerator{
     function write($player){
         $arr = new WritePlayerJson();
-        $arr->writePlayer($player);
+        $arr->write($player);
         var_dump($arr);
     }
 
     function get(){
         $arr = new GetPlayersFromJson();
-        $arr = $arr->getPlayers();
+        $arr = $arr->get();
         echo json_encode($arr);
     }
 
     function displayCli(){
         $arr = new GetPlayersFromJson();
-        $players = $arr->getPlayers();
+        $players = $arr->get();
 
         $arr = new DisplayPlayersCLI();
         $arr = $arr->display($players);
@@ -275,7 +277,7 @@ class JSONGenerator{
 
     function displayNotCli(){
         $arr = new GetPlayersFromJson();
-        $players = $arr->getPlayers();
+        $players = $arr->get();
 
         $arr = new DisplayPlayersNotCLI();
         $arr = $arr->display($players);
@@ -295,18 +297,18 @@ class FileGenerator{
         $getObj = new GetPlayersFromFile();
 
         $arr = new WritePlayerFile();
-        $arr->writePlayer($getObj, $player, 'test.txt');
+        $arr->write($getObj, $player, 'test.txt');
     }
 
     function get(){
         $arr = new GetPlayersFromFile();
-        $arr = $arr->getPlayers('test.txt');
+        $arr = $arr->get('test.txt');
         echo ($arr);
     }
 
     function displayCli(){
         $arr = new GetPlayersFromFile();
-        $players = $arr->getPlayers('test.txt');
+        $players = $arr->get('test.txt');
 
         $arr = new DisplayPlayersCLI();
         $arr = $arr->display($players);
@@ -314,7 +316,7 @@ class FileGenerator{
 
     function displayNotCli(){
         $arr = new GetPlayersFromJson();
-        $players = $arr->getPlayers('test.txt');
+        $players = $arr->get('test.txt');
 
         $arr = new DisplayPlayersNotCLI();
         $arr = $arr->display($players);
